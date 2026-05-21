@@ -6,41 +6,27 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req,res)=>{
-
+app.get("/", (req, res) => {
     res.send("SERVER WORKING");
 });
 
-app.post("/predict",(req,res)=>{
+app.post("/predict", (req, res) => {
 
-    const period =
-        req.body.period || "000";
+    const period = req.body.period || "000";
 
-    const digits =
-        period.split("").map(Number);
+    const digits = period.split("").map(Number);
 
-    const sum =
-        digits.reduce((a,b)=>a+b,0);
+    const sum = digits.reduce((a,b)=>a+b,0);
 
-    const number =
-        ((sum * 7) + digits[2]) % 10;
+    const number = ((sum * 7) + digits[2]) % 10;
 
-    let color = "GREEN";
+    const color =
+        number % 2 === 0 ? "RED" : "GREEN";
 
-    if(number % 2 == 0){
-
-        color = "RED";
-    }
-
-    let size = "BIG";
-
-    if(number < 5){
-
-        size = "SMALL";
-    }
+    const size =
+        number >= 5 ? "BIG" : "SMALL";
 
     res.send({
-
         color: color,
         size: size,
         number: number,
@@ -48,10 +34,8 @@ app.post("/predict",(req,res)=>{
     });
 });
 
-const PORT =
-    process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
-app.listen(PORT,()=>{
-
+app.listen(PORT, () => {
     console.log("SERVER WORKING");
 });
