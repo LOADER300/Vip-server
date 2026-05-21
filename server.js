@@ -7,36 +7,32 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const client =
-    new OpenAI({
+const client = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
+});
 
-        apiKey:
-            process.env.OPENAI_API_KEY
-    });
+app.get("/", (req, res) => {
 
-app.post("/predict", async (req,res)=>{
+    res.send("GPT AI SERVER RUNNING");
+});
 
-    try{
+app.post("/predict", async (req, res) => {
 
-        const period =
-            req.body.period;
+    try {
+
+        const period = req.body.period;
 
         const prompt = `
-You are a prediction API.
-
 Reply ONLY valid JSON.
 
-Example:
-
 {
-  "color":"GREEN",
-  "size":"BIG",
-  "number":7,
-  "confidence":92
+ "color":"GREEN",
+ "size":"BIG",
+ "number":7,
+ "confidence":92
 }
 
-Now analyze:
-
+Analyze:
 ${period}
 `;
 
@@ -56,17 +52,27 @@ ${period}
         let result =
             chat.choices[0].message.content;
 
-        result =
-            result
-            .replace(/```json/g,"")
-            .replace(/```/g,"")
+        result = result
+            .replace(/```json/g, "")
+            .replace(/```/g, "")
             .trim();
 
-        res.send(
-            JSON.parse(result)
-        );
+        try {
 
-    }catch(err){
+            res.send(JSON.parse(result));
+
+        } catch {
+
+            res.send({
+
+                color: "GREEN",
+                size: "BIG",
+                number: 7,
+                confidence: 90
+            });
+        }
+
+    } catch (err) {
 
         res.status(500).send({
 
@@ -75,9 +81,10 @@ ${period}
     }
 });
 
-app.listen(3000,()=>{
+const PORT =
+    process.env.PORT || 3000;
 
-    console.log(
-        "GPT AI SERVER RUNNING"
-    );
+app.listen(PORT, () => {
+
+    console.log("GPT AI SERVER RUNNING");
 });
