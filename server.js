@@ -1,62 +1,71 @@
 const express = require("express");
 const cors = require("cors");
+const OpenAI = require("openai");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-function aiPredict(period){
+const client =
+    new OpenAI({
 
-    const last3 =
-        period.slice(-3);
+        apiKey:
+            process.env.OPENAI_API_KEY
+    });
 
-    const digits =
-        last3.split("").map(Number);
+app.post("/predict", async (req,res)=>{
 
-    const sum =
-        digits.reduce((a,b)=>a+b,0);
+    try{
 
-    const weighted =
-        (digits[0]*2) +
-        (digits[1]*3) +
-        (digits[2]*5);
+        const period =
+            req.body.period;
 
-    const ai =
-        (sum + weighted + 7) % 10;
+        const prompt = `
+        Analyze this 3 digit trend:
 
-    let color = "VIOLET";
+        ${period}
 
-    if([1,3,7,9].includes(ai)){
-        color = "GREEN";
+        Return ONLY JSON:
+
+        {
+          "color":"GREEN",
+          "size":"BIG",
+          "number":7,
+          "confidence":92
+        }
+        `;
+
+        const chat =
+            await client.chat.completions.create({
+
+            model: "gpt-4.1-mini",
+
+            messages: [
+                {
+                    role: "user",
+                    content: prompt
+                }
+            ]
+        });
+
+        const result =
+            chat.choices[0].message.content;
+
+        res.send(JSON.parse(result));
+
+    }catch(err){
+
+        res.status(500).send({
+
+            error: err.message
+        });
     }
-
-    if([2,4,6,8].includes(ai)){
-        color = "RED";
-    }
-
-    return {
-        number: ai,
-        color: color,
-        confidence: 90
-    };
-}
-
-app.post("/predict",(req,res)=>{
-
-    const period =
-        req.body.period;
-
-    res.json(
-        aiPredict(period)
-    );
 });
 
-app.get("/",(req,res)=>{
+app.listen(3000,()=>{
 
-    res.send(
-        "AI SERVER RUNNING"
+    console.log(
+        "GPT AI SERVER RUNNING"
     );
 });
-
-app.listen(3000);
