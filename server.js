@@ -22,19 +22,23 @@ app.post("/predict", async (req,res)=>{
             req.body.period;
 
         const prompt = `
-        Analyze this 3 digit trend:
+You are a prediction API.
 
-        ${period}
+Reply ONLY valid JSON.
 
-        Return ONLY JSON:
+Example:
 
-        {
-          "color":"GREEN",
-          "size":"BIG",
-          "number":7,
-          "confidence":92
-        }
-        `;
+{
+  "color":"GREEN",
+  "size":"BIG",
+  "number":7,
+  "confidence":92
+}
+
+Now analyze:
+
+${period}
+`;
 
         const chat =
             await client.chat.completions.create({
@@ -49,10 +53,18 @@ app.post("/predict", async (req,res)=>{
             ]
         });
 
-        const result =
+        let result =
             chat.choices[0].message.content;
 
-        res.send(JSON.parse(result));
+        result =
+            result
+            .replace(/```json/g,"")
+            .replace(/```/g,"")
+            .trim();
+
+        res.send(
+            JSON.parse(result)
+        );
 
     }catch(err){
 
